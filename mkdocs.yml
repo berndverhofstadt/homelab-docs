@@ -1,6 +1,8 @@
 site_name: Docs Verhofstadt Cloud
 theme:
   name: material
+  logo: assets/favicon.png
+  favicon: assets/favicon.png
   features:
     - navigation.tabs
     - navigation.sections
@@ -25,8 +27,6 @@ theme:
         name: Switch to light mode    
       primary: teal
       accent: lime
-plugins:
-  - social
 
 extra:
   social:
