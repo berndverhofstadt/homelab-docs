@@ -5,8 +5,9 @@ theme:
   favicon: assets/favicon.png
   features:
     - navigation.tabs
-    - navigation.sections
-    - toc.integrate
+    - navigation.tracking
+    - navigation.path
+    - toc.follow
     - navigation.top
     - search.suggest
     - search.highlight
@@ -27,7 +28,10 @@ theme:
         name: Switch to light mode    
       primary: teal
       accent: lime
-
+plugins:
+  - search
+  - mkdocs-nav-weight
+  
 extra:
   social:
     - icon: fontawesome/brands/github-alt
