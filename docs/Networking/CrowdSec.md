@@ -1,13 +1,20 @@
 ---
 authors:
-  - Bernd Verhofstadt
+    - Bernd Verhofstadt
 weight: 44
 ---
 # Protecting Traefik with CrowdSec
 
+## At a glance
+
+- Explains how the CrowdSec agent and Traefik bouncer work together to block malicious IPs.
+- Shows how to wire both containers on Unraid and connect Traefik via ForwardAuth.
+- Highlights how logs and placeholders are used so no real IPs, hosts or keys appear in the docs.
+
 To protect public‑facing services from brute‑force attempts, scanners and other malicious traffic, I use **CrowdSec** in combination with a **Traefik bouncer**. CrowdSec analyses logs, detects bad behaviour and maintains a local blocklist; the bouncer integrates with Traefik to actually block those IPs before they reach the applications.
 
-All values in this page (hostnames, keys, IPs) are examples only.
+!!! note
+  All values in this page (hostnames, keys, IPs) are examples only.
 
 ## Components
 

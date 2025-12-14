@@ -1,6 +1,6 @@
 ---
 authors:
-  - Bernd Verhofstadt
+    - Bernd Verhofstadt
 weight: 64
 ---
 # Ephemeral secrets with cryptgeon

@@ -4,6 +4,13 @@ authors:
 weight: 42
 ---
 # Reverse Proxy: Traefik
+
+## At a glance
+
+- All HTTP and HTTPS traffic terminates at Traefik, which then routes requests to containers on a shared Docker network.
+- Traefik automatically redirects HTTP to HTTPS and manages certificates (via Cloudflare DNS in this setup).
+- The reverse proxy ties into other components like authentication (Authelia/authentik) and protection (CrowdSec).
+
 In my homelab setup, all incoming 80 and 443 traffic must go through the reverse proxy. Traefik makes sure that the connection is made on the docker network layer and that all requests are moved from HTTP (port 80) to HTTPS (port 443), next to that, Traefik handles the SSL certificates for the domain. 
 
 To make use of these ports, the default ports from Unraid must be modified. Ports can be modified in Unraid under Settings > Management Access > HTTP port & HTTPS port. Note that after this change you must use the designated port, e.g. http://unraid.local:81.

@@ -1,6 +1,6 @@
 ---
 authors:
-  - Bernd Verhofstadt
+    - Bernd Verhofstadt
 weight: 35
 ---
 # Unraid backup and restore strategy
@@ -84,6 +84,19 @@ When restoring from a real backup, always review environment variables and confi
 - Passwords and API keys
 - SMTP credentials
 - External URLs and callback endpoints
+
+## Sanitization notes for this repository
+
+Across all pages in this documentation, concrete identifiers from the private homelab are intentionally replaced with placeholders. Some conventions you will see:
+
+- Domains and hostnames: `example.com`, `app.example.com`, `id.example.com`, `unraid.example.com`
+- Internal IPs: `192.168.x.x`, `10.x.x.x` (or specific examples like `192.168.1.10`)
+- Secrets and credentials: `<TOKEN>`, `<BOUNCER_API_KEY>`, `<REDIS_PASSWORD>`, `<SMTP_PASSWORD>`, `<cloudflared-token>`, `<STRONG_DB_PASSWORD>`
+
+If you copy a snippet from these docs into your own configuration, make sure to:
+
+- Replace every placeholder with a real value appropriate for your environment.
+- Avoid committing your own real hostnames, IPs or secrets back into this public repository.
 
 ## Testing the restore process
 

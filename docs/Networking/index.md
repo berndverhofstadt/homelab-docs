@@ -9,7 +9,7 @@ weight: 40
 
 You can find many useful videos on docker networks, reverse proxy and cloudflared tunnel. This guide will show you what you need for a basic setup.
 
-You need a common network before you set up different containers for reverse proxy (Traefik), DNS (blocky), Cloudflared Tunnel and Authentication (authelia). This allows these services to talk to each other.
+You need a common network before you set up different containers for a [reverse proxy (Traefik)](Reverse-Proxy.md), [DNS server (Blocky)](DNS-server.md), [Cloudflared Tunnel](Tunnel.md) and [authentication service (Authelia)](../Authentication/index.md). This allows these services to talk to each other.
 
 
 ## The concept explained

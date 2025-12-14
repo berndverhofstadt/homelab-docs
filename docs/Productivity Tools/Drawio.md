@@ -1,6 +1,6 @@
 ---
 authors:
-  - Bernd Verhofstadt
+    - Bernd Verhofstadt
 weight: 63
 ---
 # Diagramming with draw.io

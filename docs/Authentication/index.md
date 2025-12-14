@@ -19,7 +19,7 @@ Authelia is a powerful authentication and authorization server that integrates s
 
 ### Traefik: The Gateway to Secure Access
 
-Traefik, a modern and dynamic reverse proxy and load balancer, pairs effortlessly with Authelia to create a comprehensive security solution. Traefik manages incoming requests, routing them to the appropriate backend services while seamlessly incorporating Authelia's authentication checks. This integration ensures that only authenticated users are granted access to the designated applications, protecting them from unauthorized access.
+[Traefik](../Networking/Reverse-Proxy.md), a modern and dynamic reverse proxy and load balancer, pairs effortlessly with Authelia to create a comprehensive security solution. Traefik manages incoming requests, routing them to the appropriate backend services while seamlessly incorporating Authelia's authentication checks. This integration ensures that only authenticated users are granted access to the designated applications, protecting them from unauthorized access.
 
 ### Configuring Authelia and Traefik
 

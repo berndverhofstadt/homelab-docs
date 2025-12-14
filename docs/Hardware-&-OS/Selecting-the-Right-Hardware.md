@@ -11,7 +11,7 @@ In the realm of home labs, choosing the appropriate hardware lays the foundation
 
 Purpose: This compact powerhouse excels in handling basic infrastructure services within my home lab.
 Services Running:
-- Reverse Proxy (Traefik): Directing and managing incoming traffic to the appropriate internal servers.
+- Reverse Proxy ([Traefik](../Networking/Reverse-Proxy.md)): Directing and managing incoming traffic to the appropriate internal servers.
 - Local DNS Server: Facilitating seamless redirection for local network users without traversing the internet.
 - Unifi Network Application: Managing and optimizing network resources for a cohesive user experience.
 - Cloudflared Tunnel: Establishing secure and efficient connections through Cloudflare.
@@ -22,10 +22,10 @@ Services Running:
 Purpose: Designed for versatility, this Supermicro server hosts an array of self-hosted services, extending beyond basic infrastructure needs.
 Additional Services:
 - Basic Infrastructure Services: Similar to the USSF, providing essential functionalities.
-- Filerun: A self-hosted cloud file server, akin to OwnCloud, for secure data management.
-- Authentication Service (Authelia): Ensuring robust security measures for user authentication.
-- Home Automation (NodeRed and OpenHab): Creating a smart and interconnected home environment.
-- Productivity Services: Including Drawio, Codex, Rallly, Ghostfolio, Crypteogen, fostering a productive and efficient workspace.
+- [FileRun](../Productivity%20Tools/FileRun.md): A self-hosted cloud file server, akin to OwnCloud, for secure data management.
+- Authentication Service (Authelia): Ensuring robust security measures for user authentication (see [Authentication](../Authentication/index.md)).
+- Home Automation (NodeRed and OpenHab): Creating a smart and interconnected home environment (see [OpenHab as Home Automation](../Home-Automation/index.md)).
+- Productivity Services: Including [draw.io](../Productivity%20Tools/Drawio.md), Codex, Rallly, Ghostfolio, Cryptgeon, fostering a productive and efficient workspace.
 
 The Supermicro server, with its expanded storage options, accommodates a diverse range of services that require more substantial data handling. This strategic allocation allows for optimal resource utilization, ensuring that each server operates efficiently within its designated scope.
 

@@ -25,7 +25,7 @@ Finally, make sure to select the created custom docker network.
 You need to go to the Access section and open Tunnel on the Cloudflare Zero Trust dashboard. Then, choose the tunnel and click on configure to see the token. Go to the Public hostnames tab and add a new one. This tunnel lets you access any local resources that the host can access. You can test it by creating a public hostname for a service on your network (for example, router config at 192.168.1.1). But remember, the public domain is open to everyone by default. So, I suggest you delete the public hostname when you are done testing. I have my final configuration pointing to my reverse proxy, which handles all my local traffic and certificates. The service field is for the reverse proxy’s hostnames. If your reverse proxy is not in the docker setup (for example, another Unraid server), you need to add the IP address.
 
 ### Example for accessing Unraid dashboard 
-More info at [Traefik](https://docs.verhofstadt.cloud/networking/traefik) on how to correct configure reverse proxy
+More info on how to correctly configure the reverse proxy can be found on the [Traefik reverse proxy](Reverse-Proxy.md) page.
 
 Public hostname: `unraid.mydomain.com`  
 Services: `https://traefik:443`  

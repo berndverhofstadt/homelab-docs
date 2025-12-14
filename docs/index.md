@@ -23,6 +23,21 @@ VCloud, your very own Virtual Cloud, is a haven for those who seek to replicate 
 ## Getting Started
 Your journey into the VCloud universe begins with our comprehensive documentation. Navigate through step-by-step guides that cover everything from initial setup to advanced configurations. Whether you're a beginner or an experienced user, VCloud's documentation is designed to be your trusted companion.
 
+## How to use these docs
+
+If you want to follow roughly the same path as this homelab, a sensible reading order is:
+
+1. [Unraid OS](Hardware-&-OS/Unraid-OS.md) – get familiar with the base operating system and its plugin ecosystem.
+2. [Unraid backup and restore strategy](Hardware-&-OS/Unraid-Backup-and-Restore.md) – understand how the configuration is protected.
+3. [Networking](Networking/index.md) – custom Docker network, reverse proxy (Traefik), DNS and tunnels.
+4. [Authentication](Authentication/index.md) – Authelia as access gateway and authentik as Identity Provider.
+5. [Home Automation](Home-Automation/index.md) – OpenHab and the Smart Grid integration for the heat pump boiler.
+6. [Productivity tools](Productivity%20Tools/index.md) – self‑hosted apps for files, diagrams, utilities and more.
+
+You can, of course, jump directly to any topic that matches your current project, but this order mirrors how the environment grew over time.
+
+For details on running, extending and publishing this documentation itself, see the [Maintaining these docs](Contributing.md) page.
+
 ## Community Collaboration
 Connect with like-minded enthusiasts in the VCloud community. Share your insights, troubleshoot challenges, and collaborate on exciting projects. The true essence of VCloud lies in the collective knowledge and passion of our community.
 

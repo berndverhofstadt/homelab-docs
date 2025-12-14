@@ -1,4 +1,6 @@
-site_name: Docs Verhofstadt Cloud
+site_name: VCloud Homelab Docs
+site_url: https://berndverhofstadt.github.io/homelab-docs/
+repo_url: https://github.com/berndverhofstadt/homelab-docs
 theme:
   name: material
   logo: assets/favicon.png

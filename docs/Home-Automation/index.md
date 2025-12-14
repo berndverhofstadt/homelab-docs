@@ -1,9 +1,9 @@
 ---
 authors:
-	- Bernd Verhofstadt
+    - Bernd Verhofstadt
 weight: 40
 ---
-# Home Automation: OpenHab
+# OpenHab as Home Automation
 
 OpenHab is the central brain of my home automation setup. It ties together devices from different vendors (Shelly, Atlantic, Zigbee, MQTT, …) and exposes a single place where all the logic, dashboards and integrations live.
 
@@ -16,7 +16,7 @@ At a high level, the OpenHab setup looks like this:
 - **Platform**: Unraid server, running OpenHab as a Docker container
 - **Network**: OpenHab is on the same Docker / LAN networks as other services (Shelly devices, MQTT broker, energy meter, …)
 - **Storage**: configuration and userdata are mapped to persistent paths on the Unraid array
-- **Access**: the main UI is available via the browser, optionally fronted by Traefik (see networking section)
+- **Access**: the main UI is available via the browser, optionally fronted by [Traefik reverse proxy](../Networking/Reverse-Proxy.md) (see [Networking](../Networking/index.md))
 
 OpenHab is responsible for:
 
@@ -43,7 +43,7 @@ Once the container is started, the OpenHab UI is available on the configured HTT
 
 - `http://openhab.local:8080` or `http://<unraid-ip>:8080`
 
-If you are using Traefik as reverse proxy, you can expose OpenHab via a friendly hostname and HTTPS (see the Traefik page in the Networking section).
+If you are using Traefik as reverse proxy, you can expose OpenHab via a friendly hostname and HTTPS (see the [Traefik reverse proxy](../Networking/Reverse-Proxy.md) page in the Networking section).
 
 ## Structure: Things, Items, Rules and UI
 
@@ -100,8 +100,8 @@ These integrations provide the raw data; OpenHab rules turn that into behaviour.
 
 OpenHab appears in several other parts of this documentation:
 
-- The **Smart Grid Automation** page describes how OpenHab controls the Atlantic Explorer v5 heat pump boiler via a Shelly Pro 2 and SG Ready contacts, including the full JS rule.
-- Networking and reverse proxy pages show how services like OpenHab can be exposed securely via Traefik.
+- The [Smart Grid Automation](Smart-Grid-Automation.md) page describes how OpenHab controls the Atlantic Explorer v5 heat pump boiler via a Shelly Pro 2 and SG Ready contacts, including the full JS rule.
+- The [Networking overview](../Networking/index.md) and [Traefik reverse proxy](../Networking/Reverse-Proxy.md) pages show how services like OpenHab can be exposed securely via Traefik.
 
 This page is meant as the high‑level entry point for the home automation stack; detailed configurations for specific use‑cases are documented in their respective sub‑pages.
 

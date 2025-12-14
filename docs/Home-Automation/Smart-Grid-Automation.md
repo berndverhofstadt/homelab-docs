@@ -1,9 +1,15 @@
 ---
 authors:
-		- Bernd Verhofstadt
+    - Bernd Verhofstadt
 weight: 50
 ---
 # Smart Grid Ready heat pump boiler
+
+## At a glance
+
+- Explains what Smart Grid Ready means and how the two input contacts (I1 / I2) map to different operating modes.
+- Shows how the Atlantic Explorer v5 heat pump boiler is wired to a Shelly Pro 2 for 230 V smart‑grid control.
+- Includes an OpenHab JSRule example that selects the appropriate mode based on grid injection and time of day.
 
 In this setup I combine three building blocks to make my domestic hot water production a bit smarter:
 
@@ -17,8 +23,8 @@ Below I explain how the Smart Grid Ready concept works in general, how the Atlan
 
 ![Smart grid wiring schematic](../assets/schema-smart-grid-heatpump-proficad.png)
 
-> **Important**  
-> This page focuses on the **230 V Smart Grid Ready contacts variant** as used on my Atlantic Explorer v5. Many other heat pumps use **potential-free (dry) contacts**; the principles are very similar, but the electrical wiring is different. Always check the documentation of your own device.
+!!! warning "230 V smart‑grid inputs"
+	This page focuses on the **230 V Smart Grid Ready contacts variant** as used on my Atlantic Explorer v5. Many other heat pumps use **potential‑free (dry) contacts**; the principles are very similar, but the electrical wiring is different. Always check the documentation of your own device.
 
 ## What I have in this setup
 
@@ -54,8 +60,8 @@ For a general overview and wiring ideas, the unofficial Shelly guide has an exce
 
 The Atlantic Explorer v5 exposes two smart grid inputs **I1** and **I2**. Each input can be **inactive** or **active**, and the combination of both selects the operating mode of the boiler.
 
-> ⚠️ **Always confirm in the official Atlantic Explorer v5 manual which contact state corresponds to which mode for your exact model and firmware.**  
-> The table below reflects the typical SG Ready mapping (2‑bit code) and is meant as an implementation example.
+!!! warning "Confirm mapping in the manual"
+	Always confirm in the official Atlantic Explorer v5 manual which contact state corresponds to which mode for your exact model and firmware. The table below reflects the typical SG Ready mapping (2‑bit code) and is meant as an implementation example.
 
 Typical mapping for a SG Ready heat pump with two contacts:
 
@@ -96,9 +102,8 @@ This has a few important consequences:
 - The relays must be rated for 230 V AC switching. The Shelly Pro 2 is suitable for this when wired correctly.  
 - You must keep a clear separation between low‑voltage control (Ethernet / IP / automation) and the high‑voltage side.
 
-> **Note: 230 V variant only**  
-> The wiring and examples on this page are written for a **230 V smart grid input** as on my Atlantic Explorer v5.  
-> If your heat pump expects potential‑free contacts only, **do not** apply 230 V to the SG inputs. Instead, use the Shelly’s dry contacts to bridge the low‑voltage terminals provided by the manufacturer.
+!!! note "230 V variant only"
+	The wiring and examples on this page are written for a **230 V smart grid input** as on my Atlantic Explorer v5. If your heat pump expects potential‑free contacts only, **do not** apply 230 V to the SG inputs. Instead, use the Shelly’s dry contacts to bridge the low‑voltage terminals provided by the manufacturer.
 
 ## Wiring overview (Shelly Pro 2 ↔ Atlantic Explorer v5)
 

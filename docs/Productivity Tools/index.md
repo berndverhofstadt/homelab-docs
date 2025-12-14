@@ -28,7 +28,7 @@ These tools make it easy to capture how the homelab is wired, which greatly simp
 
 Document‑centric workflows are handled by a combination of tools:
 
-- A **file management / drive** solution for storing and organising documents.  
+- A **file management / drive** solution such as [FileRun](FileRun.md) for storing and organising documents.  
 - A **PDF toolbox** (for example Stirling‑PDF) for merging, splitting, converting and OCR.  
 - An **e‑signature platform** (for example Docuseal) to sign and collect signatures on documents.
 
@@ -51,6 +51,13 @@ For coordinating with others and planning events:
 - Lightweight dashboards or launchers that collect links to the most used services.
 
 Again, all of these are fronted by Traefik and protected with Authelia/authentik so that only authenticated users can access them.
+
+### Developer utilities and ephemeral secrets
+
+Two small but very useful helpers in this homelab are:
+
+- [IT Tools](IT-Tools.md) – a collection of web‑based developer utilities (encoders/decoders, formatters, converters, …).
+- [cryptgeon](Cryptgeon.md) – an ephemeral, client‑side‑encrypted note and file sharing service for one‑off secrets.
 
 ## Common deployment pattern
 
