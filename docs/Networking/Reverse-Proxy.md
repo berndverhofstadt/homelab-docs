@@ -120,3 +120,5 @@ Traefik Entrypoint:  | https | Container Label: traefik.http.routers.api.entryPo
 Traefik API:  | api@internal | Container Label: traefik.http.routers.api.service | Routing Traefik to its API Dashboard  
 Enable Traefik (Dashboard):  | true | Container Label: traefik.enable  | Enable/Disable Traefik Dashboard
 Docker Socket Proxy:  | dockersocket | Container Variable: DOCKER_HOST | Equal to the name of the dockersocket container   
+
+For protection against malicious IPs and HTTP attacks, I integrate Traefik with CrowdSec and its Traefik bouncer. The high‑level design and configuration pattern are described on the dedicated CrowdSec networking page.

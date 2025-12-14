@@ -34,3 +34,5 @@ Via the community app, many plugins are available, I have been using the followi
 - Dynamix File Manager by bergware
 - rclone by Waseh's Repository
 - User Scripts by Squid's Repository
+
+For details on how I back up and restore the overall Unraid configuration (including container templates), see the dedicated backup page.

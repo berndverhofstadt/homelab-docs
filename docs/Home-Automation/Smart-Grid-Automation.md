@@ -15,7 +15,7 @@ The goal is simple: when there is cheap or self-produced electricity available, 
 
 Below I explain how the Smart Grid Ready concept works in general, how the Atlantic Explorer v5 interprets the signals on I1 / I2, and how I tie everything together with the Shelly Pro 2 and OpenHab.
 
-![Smart grid wiring schematic](../assets/schematic-smart-grid-heatpumpboiler.png)
+![Smart grid wiring schematic](../assets/schema-smart-grid-heatpump-proficad.png)
 
 > **Important**  
 > This page focuses on the **230 V Smart Grid Ready contacts variant** as used on my Atlantic Explorer v5. Many other heat pumps use **potential-free (dry) contacts**; the principles are very similar, but the electrical wiring is different. Always check the documentation of your own device.
@@ -109,7 +109,7 @@ The high‑level wiring for this setup is:
 3. Connect OpenHab to the Shelly over the network (TCP/IP). No direct connection is needed between OpenHab and the boiler.
 
 The full schematic of my wiring is included above as an image:  
-`docs/assets/schematic-smart-grid-heatpumpboiler.png` in this repository.
+`docs/assets/schema-smart-grid-heatpump-proficad.png` in this repository.
 
 ## Automation logic in OpenHab
 
