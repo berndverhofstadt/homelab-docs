@@ -134,83 +134,178 @@ Below is the OpenHab JSRule that runs every minute to control the Shelly Pro 2 b
 
 ```js
 rules.JSRule({
-	name: "Smart SG Contact for HPB",
+    name: "Smart SG Contact for HPB",
 //  triggers: [triggers.ItemStateChangeTrigger("energyhome_Vermogen")],
-	triggers: [triggers.GenericCronTrigger("0 * * * * ?")], // every minute
-	execute: (data) => {
-		const { QuantityType } = require('@runtime');
+    triggers: [triggers.GenericCronTrigger("0 * * * * ?")], // every minute
+    execute: (data) => {
+        const { QuantityType } = require('@runtime');
 
-		const raw = items.getItem("energyhome_Vermogen").state; // bv. "508 W"
-		const q = new QuantityType(raw); // maak er een QuantityType van
-		const injection = q.toUnit("W").floatValue();
+        const raw = items.getItem("energyhome_Vermogen").state; // e.g., "508 W"
+        const q = new QuantityType(raw);
+        const injection = q.toUnit("W").floatValue(); // Negative = producing to grid, Positive = consuming from grid
 
-		const now = new Date();
-		const hour = now.getHours();
+        const now = new Date();
+        const hour = now.getHours();
+        const currentMode = items.getItem("HPB_Mode").state;
 
-		function setMode(mode) {
-			const sg1 = items.getItem("HPB_SG_1");
-			const sg2 = items.getItem("HPB_SG_2");
-			const hpbMode = items.getItem("HPB_Mode");
+        // Power consumption per mode (approximate)
+        // Boost:   1650W - 1800W -> heats to 62°C
+        // Comfort: 450W - 600W  -> heats to 62°C
+        // Normal:  450W - 600W  -> heats to 54°C
 
-			switch (mode) {
-				case "Normal":
-					if (sg1.state !== "OFF") sg1.sendCommand("OFF");
-					if (sg2.state !== "OFF") sg2.sendCommand("OFF");
-					break;
-				case "Boost":
-					if (sg1.state !== "ON") sg1.sendCommand("ON");
-					if (sg2.state !== "ON") sg2.sendCommand("ON");
-					break;
-				case "Comfort":
-					if (sg1.state !== "ON") sg1.sendCommand("ON");
-					if (sg2.state !== "OFF") sg2.sendCommand("OFF");
-					break;
-				case "Off":
-					if (sg1.state !== "OFF") sg1.sendCommand("OFF");
-					if (sg2.state !== "ON") sg2.sendCommand("ON");
-					break;
-			}
+        // Thresholds for ENTERING a mode (based on effective solar production)
+        const BOOST_ENTER_THRESHOLD = -1800;    // Need 1800W+ excess to enter Boost
+        const COMFORT_ENTER_THRESHOLD = -600;   // Need 600W+ excess to enter Comfort
 
-			// Only update HPB_Mode if it changed
-			if (hpbMode.state !== mode) {
-				hpbMode.postUpdate(mode);
-				console.log(`[HPB] Mode set to ${mode}, injection=${injection} W`);
-			}
-		}
+        // Threshold for EXITING a mode - only when actually taking from grid
+        const EXIT_TO_LOWER_THRESHOLD = 100;     // Only downgrade when consuming >100W from grid
 
-		console.log(`[HPB] Triggered at ${now.toISOString()}, injection=${injection} W, hour=${hour}`);
+        function setMode(mode) {
+            const sg1 = items.getItem("HPB_SG_1");
+            const sg2 = items.getItem("HPB_SG_2");
+            const hpbMode = items.getItem("HPB_Mode");
 
-		// Nachtlogica
-		if (hour < 7 || hour > 20) {
-			if (injection > 10000) {
-				setMode("Off");
-			} else {
-				setMode("Normal");
-			}
-			return;
-		}
+            switch (mode) {
+                case "Normal":
+                    if (sg1.state !== "OFF") sg1.sendCommand("OFF");
+                    if (sg2.state !== "OFF") sg2.sendCommand("OFF");
+                    break;
+                case "Boost":
+                    if (sg1.state !== "ON") sg1.sendCommand("ON");
+                    if (sg2.state !== "ON") sg2.sendCommand("ON");
+                    break;
+                case "Comfort":
+                    if (sg1.state !== "ON") sg1.sendCommand("ON");
+                    if (sg2.state !== "OFF") sg2.sendCommand("OFF");
+                    break;
+                case "Off":
+                    if (sg1.state !== "OFF") sg1.sendCommand("OFF");
+                    if (sg2.state !== "ON") sg2.sendCommand("ON");
+                    break;
+            }
 
-		// Safety fallback
-		if (isNaN(injection)) {
-			setMode("Normal");
-			return;
-		}
+            if (hpbMode.state !== mode) {
+                hpbMode.postUpdate(mode);
+                console.log(`[HPB] Mode changed: ${currentMode} -> ${mode}, injection=${injection} W`);
+            }
+        }
 
-		// Daytime thresholds
-		if (injection < -1800) {
-			setMode("Boost");
-		} else if (injection < -1200) {
-			setMode("Comfort");
-		} else if (injection < -600) {
-			setMode("Normal");
-		} else if (injection > 10000) {
-			// Only turn Off when grid consumption is huge
-			setMode("Off");
-		} else {
-			// Otherwise stay Normal
-			setMode("Normal");
-		}
-	}
+        // Calculate effective solar production by adding back current HPB consumption
+        // This tells us how much solar we'd have if the heat pump wasn't running
+        function getEffectiveSolarProduction() {
+            let currentConsumption = 0;
+            switch (currentMode) {
+                case "Boost":
+                    currentConsumption = 1725; // avg of 1650-1800W
+                    break;
+                case "Comfort":
+                case "Normal":
+                    currentConsumption = 525;  // avg of 450-600W
+                    break;
+                case "Off":
+                default:
+                    currentConsumption = 0;
+                    break;
+            }
+            // injection is negative when producing to grid
+            // effective production = injection - consumption (more negative = more production)
+            // Example: injection=-400W (in Boost), consumption=1725W
+            //          effective = -400 - 1725 = -2125W (we're actually producing 2125W)
+            return injection - currentConsumption;
+        }
+
+        console.log(`[HPB] Triggered at ${now.toISOString()}, injection=${injection} W, hour=${hour}, currentMode=${currentMode}`);
+
+        // Night Logic (before 7 AM or after 8 PM)
+        if (hour < 7 || hour > 20) {
+            if (injection > 10000) {
+                setMode("Off");
+            } else {
+                setMode("Normal");
+            }
+            return;
+        }
+
+        // Safety fallback for invalid readings
+        if (isNaN(injection)) {
+            setMode("Normal");
+            return;
+        }
+
+        // Smart daytime logic with hysteresis
+        const effectiveProduction = getEffectiveSolarProduction();
+        console.log(`[HPB] Effective solar production: ${effectiveProduction} W (corrected for ${currentMode} consumption)`);
+
+        let targetMode = currentMode;
+
+        if (currentMode === "Boost") {
+            // === BOOST MODE ===
+            // Stay in Boost unless we're actually consuming from the grid (>10W)
+            if (injection > EXIT_TO_LOWER_THRESHOLD) {
+                // We're taking power from the grid, need to step down
+                console.log(`[HPB] Exiting Boost - consuming ${injection}W from grid`);
+                
+                // Determine which mode to drop to based on effective production
+                if (effectiveProduction < COMFORT_ENTER_THRESHOLD) {
+                    targetMode = "Comfort"; // Still enough for Comfort
+                } else {
+                    targetMode = "Normal";  // Fall back to Normal
+                }
+            }
+            // Otherwise stay in Boost (injection is still negative or <=10W)
+            
+        } else if (currentMode === "Comfort") {
+            // === COMFORT MODE ===
+            if (injection > EXIT_TO_LOWER_THRESHOLD) {
+                // Consuming from grid, drop to Normal
+                console.log(`[HPB] Exiting Comfort - consuming ${injection}W from grid`);
+                targetMode = "Normal";
+            } else if (effectiveProduction < BOOST_ENTER_THRESHOLD) {
+                // Enough excess power to upgrade to Boost
+                console.log(`[HPB] Upgrading to Boost - effective production: ${effectiveProduction}W`);
+                targetMode = "Boost";
+            }
+            // Otherwise stay in Comfort
+            
+        } else if (currentMode === "Off") {
+            // === OFF MODE ===
+            // Only stay in Off if consuming >10000W from grid, otherwise go to Normal
+            if (injection > 10000) {
+                targetMode = "Off";
+            } else {
+                // Consumption dropped, check if we can upgrade or fall back to Normal
+                if (effectiveProduction < BOOST_ENTER_THRESHOLD) {
+                    console.log(`[HPB] Exiting Off -> Boost - effective production: ${effectiveProduction}W`);
+                    targetMode = "Boost";
+                } else if (effectiveProduction < COMFORT_ENTER_THRESHOLD) {
+                    console.log(`[HPB] Exiting Off -> Comfort - effective production: ${effectiveProduction}W`);
+                    targetMode = "Comfort";
+                } else {
+                    console.log(`[HPB] Exiting Off -> Normal - consumption dropped below 10000W`);
+                    targetMode = "Normal";
+                }
+            }
+            
+        } else {
+            // === NORMAL MODE (or unknown) ===
+            // Check if we can upgrade based on effective production
+            if (effectiveProduction < BOOST_ENTER_THRESHOLD) {
+                console.log(`[HPB] Entering Boost - effective production: ${effectiveProduction}W`);
+                targetMode = "Boost";
+            } else if (effectiveProduction < COMFORT_ENTER_THRESHOLD) {
+                console.log(`[HPB] Entering Comfort - effective production: ${effectiveProduction}W`);
+                targetMode = "Comfort";
+            } else if (injection > 10000) {
+                // Only enter Off when consuming >10000W from grid
+                targetMode = "Off";
+            } else {
+                // No solar or low consumption - stay in Normal
+                targetMode = "Normal";
+            }
+        }
+
+        setMode(targetMode);
+    }
 });
 ```
 
