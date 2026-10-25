@@ -25,14 +25,14 @@ Key characteristics:
 
 - No internal database; diagrams are typically saved to network shares or downloaded locally
 - Container listens on an internal HTTP port (e.g. 8080)
-- Traefik exposes it via HTTPS on a hostname like `draw.example.com`
+- Traefik exposes it via HTTPS on a hostname like `draw.example.org`
 - Access is protected using Authelia via the `auth@file` middleware
 
 Example Traefik labels on the draw.io container:
 
 ```text
 traefik.enable=true
-traefik.http.routers.drawio.rule=Host(`draw.example.com`)
+traefik.http.routers.drawio.rule=Host(`draw.example.org`)
 traefik.http.routers.drawio.entryPoints=https
 traefik.http.routers.drawio.middlewares=auth@file
 ```

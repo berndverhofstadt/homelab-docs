@@ -37,7 +37,8 @@ This turns Traefik into a simple but effective application‑level firewall for 
 On Unraid, the CrowdSec container:
 
 - Uses the `crowdsecurity/crowdsec` image
-- Is attached to the same custom Docker network as Traefik (e.g. `docknet`)
+- Is attached to the host's private `traefik-support` network, alongside
+  Traefik's other edge helpers
 - Mounts:
   - A data directory for CrowdSec state, e.g. `/mnt/user/appdata/crowdsec/data` → `/var/lib/crowdsec/data`
   - A configuration directory, e.g. `/mnt/user/appdata/crowdsec` → `/etc/crowdsec`
@@ -86,7 +87,7 @@ This middleware can live in the same Traefik dynamic configuration alongside oth
 Once the `crowdsec-auth` middleware exists, you can attach it to any Traefik router. For example, on a protected service you might combine Authelia and CrowdSec like this:
 
 ```text
-traefik.http.routers.app.rule=Host(`app.example.com`)
+traefik.http.routers.app.rule=Host(`app.example.org`)
 traefik.http.routers.app.entryPoints=https
 traefik.http.routers.app.middlewares=crowdsec-auth,auth@file
 ```
@@ -110,7 +111,7 @@ Additional logs (system logs, SSH, etc.) can be added as needed, but are beyond 
 Although CrowdSec processes IP addresses and request metadata, this public documentation:
 
 - Does **not** include real IP addresses, hostnames or API keys
-- Uses generic placeholders like `app.example.com`, `<BOUNCER_API_KEY>`, `crowdsec:8080`
+- Uses generic placeholders like `app.example.org`, `<BOUNCER_API_KEY>`, `crowdsec:8080`
 - Describes only the architecture and patterns, not live configuration values
 
 This keeps the homelab safer while still sharing the design and lessons learned.

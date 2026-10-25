@@ -5,39 +5,48 @@ weight: 41
 ---
 # Cloudflared tunnel
 
-## Cloudflare account setup
-To use Cloudflare’s free service for small setups, you need to create an account first. You can find many helpful videos online, or read the Cloudflare documentation [here](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/).
+Cloudflared creates an outbound connection from a private network to
+Cloudflare. It can publish selected hostnames without opening inbound router
+ports. A tunnel does not make a service private by itself: each configured
+public hostname may be reachable by anyone unless access controls are added.
 
-## Domain name setup
-To make use of this service, you need to configure or buy a domain at [Cloudflare](https://developers.cloudflare.com/registrar/account-options/domain-management).
+## Configure a tunnel
 
-## Configure token
-After you have an account and a tunnel token from the Zero Trust dashboard on Cloudflare, go to Unraid and install the Cloudflared Tunnel container from the community apps. Don’t forget to switch to advanced view. Then, in the **Post Arguments** fields, type this and replace `<cloudflared-token>` with your actual token:
+Create a tunnel in the Cloudflare dashboard and store its token as a secret.
+For a container deployment, pass the token through a protected environment
+file or secret store, not a committed Compose file:
 
-```bash
-tunnel --no-autoupdate run --token <cloudflared-token>
+```sh
+tunnel --no-autoupdate run --token <CLOUDFLARED_TOKEN>
 ```
 
-Finally, make sure to select the created custom docker network.
+Place Cloudflared on the host's `traefik-support` network and configure the
+tunnel to forward selected hostnames to Traefik. Do not attach it to each
+application network. The tunnel and Traefik should be able to reach one
+another without giving the tunnel access to application backends.
 
+An example public hostname is `app.example.org`, forwarded to the local
+Traefik HTTPS entry point. Use a generic example when documenting origins, for
+example `https://192.168.1.23:443`; replace it with the address or service
+name appropriate to your own setup.
 
-### Configure public hostnames
-You need to go to the Access section and open Tunnel on the Cloudflare Zero Trust dashboard. Then, choose the tunnel and click on configure to see the token. Go to the Public hostnames tab and add a new one. This tunnel lets you access any local resources that the host can access. You can test it by creating a public hostname for a service on your network (for example, router config at 192.168.1.1). But remember, the public domain is open to everyone by default. So, I suggest you delete the public hostname when you are done testing. I have my final configuration pointing to my reverse proxy, which handles all my local traffic and certificates. The service field is for the reverse proxy’s hostnames. If your reverse proxy is not in the docker setup (for example, another Unraid server), you need to add the IP address.
+## Public and LAN-only services
 
-### Example for accessing Unraid dashboard 
-More info on how to correctly configure the reverse proxy can be found on the [Traefik reverse proxy](Reverse-Proxy.md) page.
+Only add a hostname to tunnel ingress when it is intended to be public. A
+service routed by Traefik is not automatically public; public reachability
+depends on DNS, tunnel ingress and other network paths.
 
-Public hostname: `unraid.mydomain.com`  
-Services: `https://traefik:443`  
+The home-automation host is designed to remain LAN-only and must not be added
+to the public tunnel. It can use split-horizon DNS and a DNS-01 certificate
+for a hostname such as `openhab.internal.example.org`. DNS-01 validates
+domain ownership without creating an inbound route to the service. Verify
+LAN-only behavior from both an on-LAN and off-LAN client.
 
-*Additional application settings*  
-Origin Server Name: `unraid.mydomain.com`  
-HTTP2 connection: `enabled`  
+## Safety checklist
 
-### Example for accessing the OpenSpeedTest container
-Public hostname: `openspeedtest.mydomain.com`  
-Services: `https://traefik:443`
-
-*Additional application settings*  
-Origin Server Name: `openspeedtest.mydomain.com`  
-HTTP2 connection: `enabled`  
+- Keep the tunnel token secret and rotate it if exposed.
+- Publish only the hostnames that need public access.
+- Apply an application-level login or an explicit access policy where needed.
+- Keep internal-only services off public tunnel ingress.
+- Test actual external reachability; a hostname naming convention is not an
+  access control.
