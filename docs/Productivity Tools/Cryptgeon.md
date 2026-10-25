@@ -22,25 +22,29 @@ This makes it ideal for sharing one‑off secrets (temporary passwords, tokens, 
 
 The container uses the `cupcakearmy/cryptgeon` image and has:
 
-- A dependency on a Redis instance for in‑memory storage
+- A dependency on a dedicated Redis instance for in-memory storage
 - Environment variables to point to Redis and adjust the maximum note size
 - No local data volume (everything is in memory)
 
 In front of cryptgeon:
 
-- Traefik terminates HTTPS and routes a hostname like `secret.example.com` to the container.
+- Traefik terminates HTTPS and routes a hostname like `secret.example.org` to the container.
 - Authentication can be optional depending on your threat model; I keep it behind my usual authentication stack.
 
 Example environment and labels (sanitised):
 
 ```text
-REDIS=redis://:<REDIS_PASSWORD>@redis/
+REDIS=redis://redis/
 SIZE_LIMIT=250MiB
 
 traefik.enable=true
-traefik.http.routers.cryptgeon.rule=Host(`secret.example.com`)
+traefik.http.routers.cryptgeon.rule=Host(`secret.example.org`)
 traefik.http.routers.cryptgeon.entryPoints=https
 ```
+
+The Redis service is not shared with other applications. It is reachable only
+on Cryptgeon's private data network, which is marked internal. Traefik reaches
+the application through `proxy`; Redis is not attached to that network.
 
 ## Usage guidelines
 

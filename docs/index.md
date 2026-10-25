@@ -29,8 +29,8 @@ If you want to follow roughly the same path as this homelab, a sensible reading 
 
 1. [Unraid OS](Hardware-&-OS/Unraid-OS.md) – get familiar with the base operating system and its plugin ecosystem.
 2. [Unraid backup and restore strategy](Hardware-&-OS/Unraid-Backup-and-Restore.md) – understand how the configuration is protected.
-3. [Networking](Networking/index.md) – custom Docker network, reverse proxy (Traefik), DNS and tunnels.
-4. [Authentication](Authentication/index.md) – Authelia as access gateway and authentik as Identity Provider.
+3. [Networking](Networking/index.md) – Compose-based network segmentation, reverse proxy (Traefik), DNS and tunnels.
+4. [Authentication](Authentication/index.md) – identity and per-application access control.
 5. [Home Automation](Home-Automation/index.md) – OpenHab and the Smart Grid integration for the heat pump boiler.
 6. [Productivity tools](Productivity%20Tools/index.md) – self‑hosted apps for files, diagrams, utilities and more.
 

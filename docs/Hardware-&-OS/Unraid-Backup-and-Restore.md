@@ -5,105 +5,82 @@ weight: 35
 ---
 # Unraid backup and restore strategy
 
-A reliable backup and restore strategy is essential for any homelab. For my Unraid setup I use an automated configuration export that captures container definitions and core system settings, so I can quickly rebuild the environment on new hardware or after a failure.
+A reliable backup and restore strategy is essential for any homelab. Compose
+files are the source of truth for Compose-managed services; persistent
+application data and host configuration need separate, verifiable backup
+coverage.
 
-This page explains the overall approach without exposing any sensitive data (IP addresses, hostnames, credentials, or internal domains).
+## What to back up
 
-## What is backed up
+Keep recoverable copies of:
 
-The Unraid backup captures:
+- **System configuration** – array layout, shares, Docker and VM settings.
+- **Compose definitions** – reviewed files used to recreate each stack.
+- **Persistent application state** – databases, appdata, uploaded files,
+  indexes and any configuration that cannot be regenerated.
+- **Recovery instructions and scripts** – enough detail to restore services
+  without relying on undocumented steps.
 
-- **System configuration** – array layout, shares, Docker and VM settings
-- **Container templates** – Unraid XML templates for each container (all environment variables, port mappings, volumes, etc.)
-- **Docker Compose fallback** – a generated `docker-compose.yml` that mirrors the running containers
-- **Helper scripts and metadata** – a small restore script and a README with recovery instructions
+Back up every container that stores valuable state. Stateless tools and
+transient processing services may not need data backups, but their Compose
+definitions remain part of the system configuration. Keep an independent
+copy outside the source host or pool.
 
-Application data (databases, appdata folders, media, etc.) is backed up separately using dedicated tools and is not covered in detail on this page.
+## Backup procedure
 
-## Backup tooling
+Use the existing backup tooling for persistent configuration and data, and
+verify its coverage whenever a stack or mount changes. Database backups must
+be consistent: stop writers before filesystem copies or use a database-native
+backup method. Keep recovery copies outside the source directory and verify
+that the restore procedure can read them.
 
-The configuration export is automated using a small container that regularly:
+Do not assume that a path is on a particular pool because of its name. Check
+the actual mount, share settings and data placement on each host before
+changing a stateful volume. Do not copy between merged-user and direct-pool
+paths without understanding whether they point to the same underlying files.
+Treat direct-pool paths such as `/mnt/cache/appdata/<stack>` as targeted
+exceptions, verify the complete data is already on the intended pool, and
+change one workload at a time without also upgrading its image or rebuilding
+its database.
 
-- Reads the current Unraid Docker configuration via the Docker API
-- Serialises container definitions into:
-  - Unraid XML templates (for the native Unraid Docker interface)
-  - A consolidated `unraid-config.json` with system/container metadata
-  - A `docker-compose.yml` as an emergency fallback
-- Writes the results to a designated backup share on the array
+## Restore Compose-managed stacks
 
-Backups are scheduled to run **weekly**. The output is then included in the regular backup of the homelab data (for example via rclone or another backup tool).
-
-## Restore methods
-
-There are two main ways to restore containers from this backup.
-
-### Method 1: Native Unraid templates (recommended)
-
-This method keeps you fully within the Unraid GUI and Docker management:
-
-1. Install a fresh Unraid system and assign disks to the array.
-2. Restore the Unraid flash drive backup if available.
-3. Copy the exported container templates to the Unraid USB under:
-   - `/boot/config/plugins/dockerMan/templates-user`
-4. In the Unraid **Docker** tab, choose **Add Container** and pick from the restored templates.
-5. For each container:
-   - Verify volume mappings
-   - Point appdata volumes to the restored locations
-   - Adjust any environment variables that should not be restored verbatim (API keys, passwords, …).
-6. Start the containers and verify that applications connect correctly to their data.
-
-This method is preferred because it keeps all container definitions in Unraid’s native format and UI.
-
-### Method 2: Docker Compose (emergency fallback)
-
-If the Unraid GUI is not available or you need a very quick recreation of containers, you can use the generated `docker-compose.yml` as a secondary option.
-
-1. Copy the `docker-compose.yml` from the backup to a safe location on the Unraid server.
-2. From the Unraid console or SSH, navigate to that folder.
-3. Start the stack with:
+1. Restore the host configuration and reviewed Compose files.
+2. Restore persistent data to verified host paths. Restore environment files
+   and other secrets from protected backups; do not put them in public source
+   control.
+3. Confirm required external Docker networks exist and render the Compose
+   file:
 
    ```bash
-   docker compose up -d
+   docker compose -f compose/primary/example-stack/docker-compose.yml config --quiet
    ```
 
-4. Once the containers are running, you can fine‑tune volumes and environment variables and, if desired, later migrate definitions back into Unraid templates.
+4. Start one stack at a time, following its README and dependency order:
 
-> **Note**  
-> Docker Compose should be seen as a fallback. For day‑to‑day operation and long‑term maintainability, I use the Unraid Docker tab with XML templates.
+   ```bash
+   docker compose -f compose/primary/example-stack/docker-compose.yml up -d
+   ```
 
-## Separation of configuration and secrets
+5. Confirm service health, routing, access policy and application data before
+   restoring another stack.
 
-Because this documentation is public, and to keep the backups safe:
+## Keep public documentation generic
 
-- Real **hostnames**, **domains**, **IP addresses**, and **credentials** are **never** committed to this repository.
-- In configuration exports, secrets are either masked or replaced with placeholders before being documented.
-- Public examples in this documentation use generic values such as `example.com`, `192.168.1.10`, `<TOKEN>`, …
+Real hostnames, domains, IP addresses, email addresses, passwords, API keys
+and tokens must never be committed to this repository. Use generic values such
+as `example.org`, `app.example.org`, `192.168.1.23`, and `<TOKEN>`. Use
+reserved example email addresses such as `user@example.org`.
 
-When restoring from a real backup, always review environment variables and configuration files and re‑enter:
+When restoring from a real backup, review environment variables and
+configuration files and re-enter or verify passwords, API keys, SMTP
+credentials, external URLs and callback endpoints. Do not copy a live
+configuration into public documentation without removing real identifiers
+and secrets.
 
-- Passwords and API keys
-- SMTP credentials
-- External URLs and callback endpoints
+## Test restores
 
-## Sanitization notes for this repository
-
-Across all pages in this documentation, concrete identifiers from the private homelab are intentionally replaced with placeholders. Some conventions you will see:
-
-- Domains and hostnames: `example.com`, `app.example.com`, `id.example.com`, `unraid.example.com`
-- Internal IPs: `192.168.x.x`, `10.x.x.x` (or specific examples like `192.168.1.10`)
-- Secrets and credentials: `<TOKEN>`, `<BOUNCER_API_KEY>`, `<REDIS_PASSWORD>`, `<SMTP_PASSWORD>`, `<cloudflared-token>`, `<STRONG_DB_PASSWORD>`
-
-If you copy a snippet from these docs into your own configuration, make sure to:
-
-- Replace every placeholder with a real value appropriate for your environment.
-- Avoid committing your own real hostnames, IPs or secrets back into this public repository.
-
-## Testing the restore process
-
-A backup is only useful if it can be restored. Periodically:
-
-- Spin up a test Unraid instance (for example on spare hardware or a VM)
-- Follow **Method 1** using the exported templates
-- Validate that key services (reverse proxy, authentication, DNS, storage, automation, …) come back online
-
-This gives confidence that the documented process works and that no hidden dependencies (like hard‑coded IPs or hostnames) remain.
+A backup is useful only if it can be restored. Periodically restore a
+representative stack in a test environment, confirm that its data and
+configuration are present, and verify that key services (reverse proxy, DNS,
+storage and automation) work without depending on undocumented host values.

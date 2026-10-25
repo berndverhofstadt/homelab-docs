@@ -3,82 +3,54 @@ authors:
     - Bernd Verhofstadt
 weight: 60
 ---
-# Let the fun begin
+# Self-hosted productivity tools
 
-![AI generated home cloud](../assets/_913a8aff-d975-4b00-9a42-708c790fc388.jpg)
+This section describes application stacks managed with Docker Compose on
+Unraid. Services with a routed hostname use Traefik; a hostname alone does
+not mean a service is publicly reachable. Access controls are configured per
+application rather than assumed to be uniform. All hostnames and addresses in
+examples are generic.
 
-Productivity tools are where the homelab becomes really fun. On top of the core infrastructure (Unraid, Traefik, authentication, storage) I run a collection of self‑hosted apps for documents, tasks, assets and collaboration.
+## Files and media
 
-All of these services run as Docker containers on Unraid, are exposed through Traefik, and are protected by Authelia/authentik depending on the use case. Hostnames, IP addresses and credentials in this public documentation are intentionally replaced with generic examples.
+- [FileRun](FileRun.md) provides web-based file management. Development and
+  production use separate databases and separate processing/search services.
+- Immich is the photo library, with dedicated PostgreSQL and Redis backends.
+- Stirling-PDF provides document conversion and OCR. Its example deployment
+  is LAN-only; do not add its hostname to public tunnel ingress.
 
-## Categories of tools
+## Inventory, lists and scheduling
 
-Instead of documenting every single container, I group them by function.
+- Homebox stores an inventory and attachments using persistent embedded
+  storage.
+- NocoDB provides structured lists using persistent embedded storage.
+- Rallly is a planned polling stack. Its deployment is deferred until it is
+  deployed and verified; its planned design uses dedicated PostgreSQL and
+  self-hosted object storage.
 
-### Documentation and knowledge
+Some applications in this group are deliberately rebuilt with fresh
+configuration rather than migrated from unmanaged containers. That is a
+specific data-retention decision for those applications, not the default for
+stateful services; preserve valuable data when migrating.
 
-For technical notes, homelab documentation and general knowledge management I use:
+## Developer utilities and ephemeral secrets
 
-- A **documentation site** (this MkDocs project) for structured, version‑controlled docs.  
-- A **note‑taking / whiteboard app** (for example AFFiNE or a similar tool) for more free‑form planning and brainstorming.
+- [IT Tools](IT-Tools.md) is a stateless collection of developer utilities.
+- [cryptgeon](Cryptgeon.md) stores ephemeral encrypted notes in a dedicated
+  Redis instance.
+- A QR-generator API is a stateless endpoint for generating QR codes.
 
-These tools make it easy to capture how the homelab is wired, which greatly simplifies troubleshooting and future changes.
+## Deployment principles
 
-### Files, PDFs and signing
+1. Routed containers join the host's `proxy` network; backends remain on their
+   stack's private networks.
+2. Do not publish host ports when traffic should pass through Traefik.
+3. Persist and back up application data that cannot be recreated. Stateless
+   tools and transient processing data may not need backup.
+4. Use application login, identity integration or proxy authentication only
+   where intended for that service. Do not assume every app has the same
+   protection.
+5. Keep secrets out of Compose files and public documentation.
 
-Document‑centric workflows are handled by a combination of tools:
-
-- A **file management / drive** solution such as [FileRun](FileRun.md) for storing and organising documents.  
-- A **PDF toolbox** (for example Stirling‑PDF) for merging, splitting, converting and OCR.  
-- An **e‑signature platform** (for example Docuseal) to sign and collect signatures on documents.
-
-All of these live behind the reverse proxy and authentication layer so that personal documents are never exposed directly to the internet.
-
-### Asset and inventory tracking
-
-To keep track of hardware and household items I use:
-
-- An **asset management** tool (for example Homebox) to register devices, locations, serial numbers and purchase information.
-- A **data/workspace app** (for example a NocoDB‑like tool) for simple structured lists and tables (e.g. projects, checklists, inventories).
-
-This replaces ad‑hoc spreadsheets with something that is easier to query and extend over time.
-
-### Scheduling and collaboration
-
-For coordinating with others and planning events:
-
-- A **meeting/polling tool** (for example Rallly or similar) to find suitable times.  
-- Lightweight dashboards or launchers that collect links to the most used services.
-
-Again, all of these are fronted by Traefik and protected with Authelia/authentik so that only authenticated users can access them.
-
-### Developer utilities and ephemeral secrets
-
-Two small but very useful helpers in this homelab are:
-
-- [IT Tools](IT-Tools.md) – a collection of web‑based developer utilities (encoders/decoders, formatters, converters, …).
-- [cryptgeon](Cryptgeon.md) – an ephemeral, client‑side‑encrypted note and file sharing service for one‑off secrets.
-
-## Common deployment pattern
-
-Most productivity containers follow the same high‑level pattern:
-
-1. **Run as a Docker container** on Unraid with appdata persisted under `/mnt/user/appdata/<app-name>`.
-2. **Attach to the reverse‑proxy network** (for example a custom Docker network used by Traefik).
-3. **Expose only internal ports**; no direct exposure to the host network. Traefik handles external HTTPS.
-4. **Add Traefik labels** with a hostname such as `app.example.com` and the internal service port.
-5. **Protect access** with either:
-    - Authelia as forward‑auth, or
-    - Direct OpenID Connect integration with authentik as IdP.
-
-This keeps the configuration consistent across apps and makes it easy to spin up or retire tools without re‑thinking the basic architecture each time.
-
-## Future extensions
-
-As new needs appear (budgeting, personal finance dashboards, additional collaboration tools, …) I can add more containers that fit into the same pattern. The important part is that every new service:
-
-- Lives behind the reverse proxy
-- Is protected by the authentication stack
-- Avoids hard‑coding real hostnames, IP addresses or secrets into documentation
-
-so the overall productivity layer grows in a controlled and secure way.
+For the network layout and validation steps, see
+[Docker Compose and network segmentation](../Networking/Docker-Network-Segmentation.md).

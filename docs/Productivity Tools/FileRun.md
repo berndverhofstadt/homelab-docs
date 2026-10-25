@@ -11,14 +11,24 @@ All examples on this page are sanitised: hostnames, paths and credentials are pl
 
 ## Architecture
 
-The FileRun stack consists of:
+The FileRun deployment is split into independent development and production
+Compose projects. Each environment has its own application, MariaDB database,
+Tika processing service, Collabora instance and Elasticsearch service:
 
-- A **MariaDB** database container for FileRun metadata (users, shares, file indexes)
 - A **FileRun application** container serving the web UI
-- Persistent storage for:
-  - The FileRun application data
-  - The MariaDB data directory
-- Traefik handling HTTPS and routing a hostname such as `files.example.com` to the FileRun container
+- A dedicated **MariaDB** database for metadata
+- **Tika**, **Collabora** and **Elasticsearch** services for document
+  processing, editing and search
+- Persistent storage for application data, the database, search index and
+  service configuration
+- Traefik routing each front door, for example `drive.example.org`,
+  `dev-drive.example.org`, `office.example.org` and
+  `dev-office.example.org`, to the appropriate environment
+
+Keep the environments isolated: development can be started or stopped without
+changing production. Their front doors join `proxy`; app and data services
+join only their environment's private networks. The database and search
+services must not be shared across environments.
 
 On Unraid, the MariaDB part looks conceptually like:
 
@@ -34,7 +44,7 @@ The FileRun container then connects to this database using the same credentials.
 
 ## Deployment pattern on Unraid
 
-High-level steps to deploy FileRun on Unraid:
+For a new installation, high-level steps are:
 
 1. **Create a MariaDB container** for FileRun:
    - Set `MARIADB_DATABASE`, `MARIADB_USER`, `MARIADB_PASSWORD` to strong values.
@@ -42,17 +52,20 @@ High-level steps to deploy FileRun on Unraid:
 2. **Deploy the FileRun container**:
    - Point its database settings to the MariaDB container (`DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`).
    - Mount one or more host folders as FileRun storage roots.
-3. **Attach both containers to the reverse proxy network** so Traefik can route to FileRun.
-4. **Add Traefik labels** on the FileRun container, for example:
+3. **Attach the front door to `proxy`** and keep the database on the
+   environment's private data network.
+4. **Add Traefik labels** to each routed front door, for example:
 
    ```text
    traefik.enable=true
-   traefik.http.routers.filerun.rule=Host(`files.example.com`)
+   traefik.http.routers.filerun.rule=Host(`drive.example.org`)
    traefik.http.routers.filerun.entryPoints=https
    traefik.http.services.filerun.loadbalancer.server.port=80
    ```
 
-5. **Protect the hostname** with Authelia or authentik so that only authenticated users can access the web UI.
+5. **Configure the intended access policy** for the application. Authentication
+   is service-specific and is not assumed to be provided by a universal
+   middleware.
 
 ## Usage in the homelab
 
@@ -65,5 +78,6 @@ Typical use cases for FileRun in this setup:
 FileRun integrates nicely with the rest of the homelab:
 
 - Backups are handled at the storage level (appdata + document shares)
-- Access is fronted by the same Traefik/Authelia/authentik stack used elsewhere
+- Access is routed through Traefik; the authentication policy is configured
+  for the application
 - No sensitive internal paths or credentials are ever exposed in the public documentation

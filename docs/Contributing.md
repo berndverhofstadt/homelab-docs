@@ -59,8 +59,9 @@ Because this repository is public and based on a private homelab:
 
 - Never commit real domains, public IPs, passwords, API keys or tokens.
 - Use placeholders in all examples, for example:
-  - Domains/hostnames: `example.com`, `app.example.com`, `id.example.com`
-  - Internal IPs: `192.168.x.x`, `10.x.x.x`
+  - Domains/hostnames: `example.org`, `app.example.org`, `id.example.org`
+  - Internal IPs: documentation examples such as `192.168.1.23`
+  - Email addresses: reserved examples such as `user@example.org`
   - Secrets: `<TOKEN>`, `<BOUNCER_API_KEY>`, `<SMTP_PASSWORD>`, `<cloudflared-token>`
 
 The page `Hardware-&-OS/Unraid-Backup-and-Restore.md` contains a more detailed description of these conventions.

@@ -3,86 +3,59 @@ authors:
     - Bernd Verhofstadt
 weight: 51
 ---
-# Identity Provider: authentik
+# Identity provider: Pocket ID and OIDC
 
-While Authelia and Traefik protect individual web applications at the reverse-proxy layer, I also run a separate **Identity Provider (IdP)** based on **authentik**. This IdP provides modern protocols (OpenID Connect and SAML) and centralizes user accounts, groups and single sign-on across multiple services.
+Pocket ID provides OpenID Connect (OIDC) identity for applications that
+support it. Traefik routes traffic, while Tinyauth can bridge OIDC login to
+Traefik's forward-auth middleware for selected applications. The middleware
+is opt-in per route; the identity provider is not placed in front of itself.
 
-## Why an IdP in a homelab?
+## Components
 
-Having a dedicated IdP brings several benefits, even in a home environment:
+- **Pocket ID** – OIDC provider with persistent application data.
+- **Tinyauth** – optional forward-auth service that redirects unauthenticated
+  users through Pocket ID.
+- **Traefik** – routes requests and invokes forward-auth only for routers
+  explicitly configured to use it.
 
-- **Single Sign-On (SSO)** – Sign in once at the IdP and access multiple apps without re‑entering credentials.
-- **Central user management** – Users, groups and MFA policies are managed in one place.
-- **Standard protocols** – Many modern services support OpenID Connect or SAML out of the box.
-- **Clean separation of concerns** – The IdP handles identity; Traefik/Authelia handle HTTP routing and access control.
+The Compose deployment keeps Pocket ID and Tinyauth on `proxy`. Do not mount
+the raw Docker socket into an identity service. Keep encryption keys, OIDC
+client secrets and other credentials in protected environment files or a
+secret manager.
 
-In my setup, authentik is the source of truth for identities. Some applications integrate with it directly via OpenID Connect, while others are protected by Authelia in front of Traefik.
+## Protect a route with forward auth
 
-## High‑level architecture
-
-At a conceptual level, the authentication stack looks like this:
-
-- **authentik (IdP)**  
-    - Runs as a Docker container on Unraid.  
-    - Uses PostgreSQL and Redis as backend services.  
-    - Exposes a web interface at a hostname like `id.example.com`.
-- **Traefik (reverse proxy)**  
-    - Terminates HTTPS and routes requests to backend services.  
-    - For some apps, Traefik forwards authentication to Authelia; for others, it simply passes through to applications that speak OpenID Connect/SAML and rely on authentik directly.
-- **Authelia (access portal)**  
-    - Acts as a front‑door for selected sensitive services (see Authentication overview page).  
-    - Uses its own user store or can delegate to upstream identity providers.
-
-Applications then fall into two categories:
-
-1. **Apps that support OpenID Connect/SAML** – These are configured as clients of authentik. Users are redirected to `id.example.com` for login, and upon success they are sent back with tokens.
-2. **Apps without IdP support** – These are placed behind Traefik + Authelia. Authelia handles login and authorization before the request ever reaches the app.
-
-## Running authentik on Unraid
-
-authentik runs as a container with:
-
-- A **configuration volume** for templates and media (e.g. custom emails, logos)
-- Access to the **Docker socket** so it can discover applications if desired
-- Environment variables that point to:
-    - PostgreSQL (`AUTHENTIK_POSTGRESQL__HOST`, user, database)
-    - Redis (`AUTHENTIK_REDIS__HOST`)
-    - Email settings (SMTP host, port, username, sender)
-
-In front of the container, Traefik is configured with labels similar to:
+Add the authentication middleware only to routes that should require it:
 
 ```text
-traefik.enable=true
-traefik.http.routers.authentik.rule=Host(`id.example.com`)
-traefik.http.routers.authentik.entryPoints=https
-traefik.http.services.authentik.loadbalancer.server.port=9000
+traefik.http.routers.example-app.rule=Host(`app.example.org`)
+traefik.http.routers.example-app.entrypoints=https
+traefik.http.routers.example-app.middlewares=pocketid-auth@file
 ```
 
-> **Sanitised example**  
-> In the real configuration, hostnames, domains and credentials are different. For public documentation, everything is reduced to placeholders like `id.example.com` and `<SMTP_PASSWORD>`.
+Create an OIDC client in Pocket ID using the callback URL documented by
+Tinyauth, for example `https://auth.example.org/api/oauth/callback/provider`.
+Set the issuer, client ID and client secret in the protected configuration.
+Use the exact callback and issuer URLs required by the deployed software.
 
-## Integrating applications via OpenID Connect
+## Native OIDC applications
 
-To onboard an application to authentik using OpenID Connect, the general steps are:
+For an application with native OIDC support:
 
-1. **Create a provider** in authentik (OpenID Connect or OAuth2).  
-     - Define redirect URLs like `https://app.example.com/auth/callback`.  
-     - Configure scopes (e.g. `openid`, `profile`, `email`).
-2. **Create an application** and link it to the provider.  
-     - Assign which user groups may access the application.  
-     - Optionally configure rules (e.g. require MFA).
-3. **Configure the client app**:  
-     - Set the issuer URL (e.g. `https://id.example.com/application/o/app/`).  
-     - Enter client ID and client secret from authentik.  
-     - Match redirect/callback URLs.
+1. Create an OIDC client in Pocket ID.
+2. Register the application's exact redirect URI, such as
+   `https://app.example.org/auth/callback`.
+3. Configure the issuer URL, client ID, client secret and requested scopes in
+   the application.
+4. Verify both successful login and denied access for an unauthorized
+   account.
 
-After this, the app delegates login to authentik. Users see a consistent login page and can reuse the same MFA method for multiple services.
+## Access policy
 
-## Relationship between authentik and Authelia
+Authentication is not universal: application login, OIDC and forward auth
+are selected per service. Review the route configuration before assuming a
+service is protected. Keep services intended to be LAN-only out of public
+tunnel ingress and verify that restriction from an off-LAN client.
 
-In this homelab I use both components, but for different roles:
-
-- **authentik** – Primary Identity Provider for applications that speak OpenID Connect/SAML.
-- **Authelia** – Access gateway in front of Traefik for apps that have no native IdP integration or where I want a very lightweight protection.
-
-This combination keeps the authentication architecture flexible: some services get full SSO via authentik, while others are simply shielded behind Authelia without needing any changes inside the application itself.
+Authentik and Authelia examples from earlier iterations are not part of the
+current Compose authentication design.
